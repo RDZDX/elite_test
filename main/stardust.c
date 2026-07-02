@@ -1,7 +1,7 @@
 #include "stardust.h"
 #include "xorgfx.h"
 #include "flight.h"
-
+#include <stdlib.h>
 #include "variables.h"
 
 struct stardust_t stardust[STARDUST_COUNT];
