@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <math.h>
-
+#include <string.h>
 #include "platform.h"
 #include "generation.h"
 #include "xorgfx.h"
@@ -307,7 +307,9 @@ void gen_DrawLocalMap()
 	}
 
 	struct gen_seed_t loopSeed = originSeed;
-	bool labelOnLine[xor_textCols] = { 0 };
+	//bool labelOnLine[xor_textCols] = { 0 };
+	bool labelOnLine[xor_textCols];
+	memset(labelOnLine, 0, sizeof(labelOnLine));
 	
 	unsigned char i = 0;
 	do
