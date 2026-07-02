@@ -554,7 +554,7 @@ static void loadGame(void)
 
 static void saveGame(void)
 {
-    VMFILE f = plat_FileOpen(SAVE_VAR_NAME, VM_FS_CREATE_ALWAYS_WRITE);
+    VMFILE f = plat_FileOpen(SAVE_VAR_NAME, MODE_CREATE_ALWAYS_WRITE);
     if (f < 0) return;
 
     plat_FileWrite(f, &cmdr_name,           CMDR_NAME_MAX_LENGTH);
