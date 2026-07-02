@@ -8,7 +8,8 @@ typedef enum {
 	MILITARY
 } laser_t;
 
-extern laser_t player_lasers[];
+#define PLAYER_LASERS_COUNT 4
+extern laser_t player_lasers[PLAYER_LASERS_COUNT];
 
 extern unsigned char player_missiles;
 
