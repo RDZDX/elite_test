@@ -84,7 +84,7 @@ extern VMINT xor_clipWidth, xor_clipHeight;
 
 /* Compass */
 #define COMPASS_HCENTER   (screen_w / 2)
-#define COMPASS_VCENTER   (screen_h - DASH_HEIGHT + 20) //+40
+#define COMPASS_VCENTER   (screen_h - DASH_HEIGHT + 45) //+40 +20
 #define COMPASS_SCALE     (256 / 9)
 
 /* Ship drawing constants */
