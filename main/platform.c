@@ -1,5 +1,5 @@
 #include "platform.h"
-#include "vmgraph_sdk.h"
+#include "vmgraph.h"
 
 /* Globals defined in main.c */
 VMINT layer_hdl = -1;
