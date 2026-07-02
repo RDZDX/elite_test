@@ -10,7 +10,8 @@ VMINT xor_clipHeight = 130; /* screen_h - DASH_HEIGHT */
 
 unsigned int plat_GetTicks(void)
 {
-    return (unsigned int)vm_get_sys_time_ms();
+    //return (unsigned int)vm_get_sys_time_ms();
+    return (unsigned int)vm_get_tick_count();
 }
 
 void plat_Delay(unsigned int ms)
