@@ -53,6 +53,7 @@ unsigned char flightMsgTimer;
 
 bool stationSoi;
 bool flt_playerToDie;
+static unsigned int death_start_time;
 
 /* --------------------------------------------------------------------------
  * Tunnel/launch animations — use plat_* timing
@@ -125,6 +126,7 @@ void flt_Init(void)
     flightMsgTimer = 0;
     stationSoi     = true;
     flt_playerToDie = false;
+    death_start_time = 0;
 }
 
 static void launch(void)
@@ -482,8 +484,6 @@ static void flt_LaunchMissile(void)
 
 bool doFlightInput(void)
 {
-    updateKeys();
-
     if (second > 0 && player_speed < PLAYER_MAX_SPEED) player_speed++;
     else if (alpha > 0 && player_speed > 0)             player_speed--;
 
@@ -801,20 +801,6 @@ void flt_DoFrame(bool dashboardVisible)
 void doFlight(void)
 {
     flt_playerToDie = false;
-
-    while (doFlightInput())
-    {
-        unsigned int frameTimer = plat_GetTicks();
-
-        flt_DoFrame(true);
-        if (player_dead || player_condition == DOCKED) break;
-
-        while (plat_GetTicks() - frameTimer < FRAME_TIME);
-
-        plat_FlushScreen();
-
-        drawCycle++;
-    }
 }
 
 void flt_DamagePlayer(unsigned char amount, bool fromBack)
@@ -833,6 +819,14 @@ void flt_DamagePlayer(unsigned char amount, bool fromBack)
 
 void flt_Death(void)
 {
+    if (player_dead)
+    {
+        if (death_start_time == 0) death_start_time = plat_GetTicks();
+        return;
+    }
+
+    death_start_time = plat_GetTicks();
+
     player_dead = true;
     drawCycle   = 255;
 
@@ -848,18 +842,13 @@ void flt_Death(void)
     }
 
     player_speed = 0;
+}
 
-    unsigned int timer = plat_GetTicks();
-    while (plat_GetTicks() - timer < DEATH_SCREEN_TIME)
-    {
-        unsigned int frameTimer = plat_GetTicks();
-
-        flt_DoFrame(false);
-        xor_SetCursorPos(9, 9);
-        xor_Print("GAME OVER");
-
-        while (plat_GetTicks() - frameTimer < FRAME_TIME);
-
-        plat_FlushScreen();
-    }
+bool flt_DeathTick(void)
+{
+    flt_DoFrame(false);
+    xor_SetCursorPos(9, 9);
+    xor_Print("GAME OVER");
+    plat_FlushScreen();
+    return (plat_GetTicks() - death_start_time) >= DEATH_SCREEN_TIME;
 }

@@ -30,9 +30,11 @@ void flt_ResetPlayerCondition();
 void drawSpaceView();
 void drawDashboard();
 void doFlight();
+bool doFlightInput(void);
 
 void flt_DoFrame(bool dashboardVisible);
 void flt_DamagePlayer(unsigned char amount, bool fromBack);
 void flt_Death();
+bool flt_DeathTick(void);
 
 #endif
