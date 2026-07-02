@@ -12,10 +12,10 @@
 extern VMINT screen_w, screen_h;
 extern VMINT xor_clipWidth, xor_clipHeight;
 
-#define FRAME_TIME        2u        /* ms per frame (~60fps ceiling; original was ~1.6ms) */
+#define FRAME_TIME        50u        /* ms per frame (~60fps ceiling; original was ~1.6ms) */
 #define CURSOR_BLINK_TIME 10
 #define FLTMSG_MED_TIME   25
-#define HOLD_TIME         3
+#define HOLD_TIME         8
 #define STAR_JUMP_HOLD_TIME    50
 #define GALAXY_JUMP_HOLD_TIME  120
 #define TUNNEL_FRAME_TIME      400u /* ms */
