@@ -12,18 +12,18 @@
 extern VMINT screen_w, screen_h;
 extern VMINT xor_clipWidth, xor_clipHeight;
 
-#define FRAME_TIME        50u        /* ms per frame (~60fps ceiling; original was ~1.6ms) */
+#define FRAME_TIME        50u       /* ms per frame (~20fps) */
 #define CURSOR_BLINK_TIME 10
 #define FLTMSG_MED_TIME   25
-#define HOLD_TIME         8
+#define HOLD_TIME         8         /* frames before key auto-repeats (~400ms at 50ms/frame) */
 #define STAR_JUMP_HOLD_TIME    50
 #define GALAXY_JUMP_HOLD_TIME  120
 #define TUNNEL_FRAME_TIME      400u /* ms */
 #define TUNNEL_HOLD_TIME       1600u
 #define DEATH_SCREEN_TIME      8000u
 
-/* Dashboard: simplified 30px strip at the bottom of the screen */
-#define DASH_HEIGHT       30
+/* Dashboard: 60px strip at the bottom — tall enough for all gauges on 320x240 */
+#define DASH_HEIGHT       60
 #define DASH_HOFFSET      0
 /* Runtime macros that depend on screen_w / screen_h */
 #define DASH_VOFFSET      (screen_h - DASH_HEIGHT)
@@ -52,7 +52,7 @@ extern VMINT xor_clipWidth, xor_clipHeight;
 
 /* Local map constants (scaled for 320x240 landscape) */
 #define LCL_MAP_HFIX      160
-#define LCL_MAP_VFIX      105
+#define LCL_MAP_VFIX      90
 #define LCL_MAP_DXMAX     (LCL_MAP_HFIX / 4)
 #define LCL_MAP_DYMAX     (LCL_MAP_VFIX / 2 - HEADER_DIVIDER_Y / 2)
 #define GLX_MAP_HOFFSET   0
@@ -63,9 +63,9 @@ extern VMINT xor_clipWidth, xor_clipHeight;
 #define SML_CRS_SPREAD    3
 #define SML_CRS_SIZE      3
 
-/* Radar: simplified, centered at bottom strip */
+/* Radar: centered in the dashboard strip */
 #define RADAR_HCENTER     (screen_w / 2)
-#define RADAR_VCENTER     (screen_h - DASH_HEIGHT + 15)
+#define RADAR_VCENTER     (screen_h - DASH_HEIGHT + 30)
 #define RADAR_XSCALE      256
 #define RADAR_ZSCALE      1024
 #define RADAR_YSCALE      512
@@ -79,11 +79,11 @@ extern VMINT xor_clipWidth, xor_clipHeight;
 
 /* SOI indicator position */
 #define SOI_INDIC_POS_X   (screen_w - 12)
-#define SOI_INDIC_POS_Y   (screen_h - DASH_HEIGHT + 2)
+#define SOI_INDIC_POS_Y   (screen_h - DASH_HEIGHT + 4)
 
 /* Compass */
 #define COMPASS_HCENTER   (screen_w / 2)
-#define COMPASS_VCENTER   (screen_h - DASH_HEIGHT + 10)
+#define COMPASS_VCENTER   (screen_h - DASH_HEIGHT + 20)
 #define COMPASS_SCALE     (256 / 9)
 
 /* Ship drawing constants */
