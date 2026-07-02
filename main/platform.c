@@ -93,9 +93,10 @@ void plat_FlushScreen(void)
     for (int ly = 0; ly < LOGICAL_H; ly++)
     {
         const VMUINT16* src = logical_buf + ly * LOGICAL_W;
+        int phys_x = LOGICAL_H - 1 - ly; /* physical x column */
         for (int lx = 0; lx < LOGICAL_W; lx++)
         {
-            phys[(LOGICAL_W - 1 - lx) * LOGICAL_H + ly] = src[lx];
+            phys[lx * LOGICAL_H + phys_x] = src[lx];
         }
     }
 
