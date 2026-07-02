@@ -1,7 +1,7 @@
 #include "ship.h"
 #include "platform.h"
 #include "ship_data.h"
-
+#include <stdlib.h>
 #include "xorgfx.h"
 #include "linear.h"
 #include "variables.h"
