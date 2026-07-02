@@ -1,5 +1,4 @@
 #include "platform.h"
-#include "vmgraph.h"
 
 /* Globals defined in main.c */
 VMINT layer_hdl = -1;
@@ -8,11 +7,13 @@ VMINT screen_w = LOGICAL_W;
 VMINT screen_h = LOGICAL_H;
 VMINT xor_clipWidth = LOGICAL_W;
 VMINT xor_clipHeight = LOGICAL_H - 30; /* screen_h - DASH_HEIGHT */
+
+/* Logical landscape framebuffer: game always draws into this 320x240 buffer.
+   plat_FlushScreen() rotates it into the 240x320 physical layer_buf. */
 static VMUINT16 logical_buf[LOGICAL_W * LOGICAL_H];
 
 unsigned int plat_GetTicks(void)
 {
-    //return (unsigned int)vm_get_sys_time_ms();
     return (unsigned int)vm_get_tick_count();
 }
 
@@ -46,9 +47,7 @@ void plat_FillRect(int x, int y, int w, int h, VMUINT16 color)
     {
         VMUINT16* row = logical_buf + yy * LOGICAL_W;
         for (int xx = x; xx < x1; xx++)
-        {
             row[xx] = color;
-        }
     }
 }
 
@@ -73,22 +72,38 @@ void plat_Line(int x0, int y0, int x1, int y1, VMUINT16 color)
     }
 }
 
+/*
+ * plat_FlushScreen — rotate logical_buf (320x240 landscape) into the
+ * physical layer_buf (240x320 portrait) using a 270-degree clockwise
+ * rotation, then flush to the display.
+ *
+ * Mapping (270° CW):  logical(lx, ly)  →  physical(ly, LOGICAL_W-1-lx)
+ * Physical layout: phys_w = LOGICAL_H = 240,  phys_h = LOGICAL_W = 320
+ * physical index = physical_y * phys_w + physical_x
+ *                = (LOGICAL_W-1-lx) * LOGICAL_H + ly
+ *
+ * vm_graphic_rotate() is NOT used here because it expects an MRE image
+ * resource buffer (with frame header), not a raw pixel array.
+ */
 void plat_FlushScreen(void)
 {
     if (layer_hdl < 0 || !layer_buf) return;
-    vm_graphic_rotate(
-        (VMBYTE*)layer_buf,
-        0, 0,
-        (VMBYTE*)logical_buf,
-        0,
-        VM_ROTATE_DEGREE_270
-    );
+
+    VMUINT16* phys = (VMUINT16*)layer_buf;
+    for (int ly = 0; ly < LOGICAL_H; ly++)
+    {
+        const VMUINT16* src = logical_buf + ly * LOGICAL_W;
+        for (int lx = 0; lx < LOGICAL_W; lx++)
+        {
+            phys[(LOGICAL_W - 1 - lx) * LOGICAL_H + ly] = src[lx];
+        }
+    }
+
     vm_graphic_flush_layer(&layer_hdl, 1);
 }
 
 VMFILE plat_FileOpen(const VMWCHAR* path, int mode)
 {
-    //return vm_file_open(path, mode, VM_TRUE);
     return vm_file_open((VMWSTR)path, mode, VM_TRUE);
 }
 
@@ -115,8 +130,6 @@ void plat_FileClose(VMFILE f)
 
 int plat_FileExists(const VMWCHAR* path)
 {
-    //VMINT attr = vm_file_get_attributes(path);
-    //return attr >= 0 ? 1 : 0;
     VMINT attr = vm_file_get_attributes((VMWSTR)path);
     return (attr >= 0);
 }
