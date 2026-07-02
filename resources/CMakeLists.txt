@@ -1,6 +1,6 @@
 set(TARGET_NAME "resources")
 
-add_custom_command( # repack triger 
+add_custom_command( # repack trigger 
    OUTPUT null.cpp
    COMMAND ${CMAKE_COMMAND} -E touch null.cpp
 )

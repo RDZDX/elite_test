@@ -12,7 +12,7 @@
 
 
 #define SHIPS_START ships
-#define SHIPS_END (ships + MAX_SHIPS * sizeof(struct ship_t))
+#define SHIPS_END (ships + MAX_SHIPS)
 
 struct ship_t sun;
 struct ship_t planet;
@@ -466,10 +466,6 @@ void DoAI(unsigned char shipIndex)
 	}
 
 	// steering and thrust!
-ships[shipIndex].orientation.a[1], ships[shipIndex].orientation.a[2], ships[shipIndex].orientation.a[3], 
-ships[shipIndex].orientation.a[4], ships[shipIndex].orientation.a[5], ships[shipIndex].orientation.a[6], 
-ships[shipIndex].orientation.a[7], ships[shipIndex].orientation.a[8]);
-
 	// pitch is simple
 	const signed int roofAlign = dot(goVector, getRow(ships[shipIndex].orientation, 1));
 	ships[shipIndex].pitch = roofAlign > 0 ? -3 : 3;

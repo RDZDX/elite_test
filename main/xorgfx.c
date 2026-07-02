@@ -174,7 +174,8 @@ void xor_Line(signed int x0, signed int y0, signed int x1, signed int y1)
 
 void xor_Crosshair(unsigned int x, unsigned char y, unsigned char spread, unsigned char size)
 {
-    for (unsigned char i = spread; i < spread + size; i++)
+    unsigned char const end = spread + size;
+    for (unsigned char i = spread; i < end; i++)
     {
         xor_Point(x,     y + i);
         xor_Point(x,     y - i);
