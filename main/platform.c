@@ -1,12 +1,13 @@
 #include "platform.h"
+#include "vmgraph_sdk.h"
 
 /* Globals defined in main.c */
 VMINT layer_hdl = -1;
 VMUINT8* layer_buf = NULL;
-VMINT screen_w = 128;
-VMINT screen_h = 160;
-VMINT xor_clipWidth = 128;
-VMINT xor_clipHeight = 130; /* screen_h - DASH_HEIGHT */
+VMINT screen_w = LOGICAL_W;
+VMINT screen_h = LOGICAL_H;
+VMINT xor_clipWidth = LOGICAL_W;
+VMINT xor_clipHeight = LOGICAL_H - 30; /* screen_h - DASH_HEIGHT */
 
 unsigned int plat_GetTicks(void)
 {
@@ -77,6 +78,7 @@ void plat_Line(int x0, int y0, int x1, int y1, VMUINT16 color)
 void plat_FlushScreen(void)
 {
     if (layer_hdl < 0) return;
+    vm_graphic_rotate_layer(layer_hdl, VM_GDI_ROTATE_270);
     vm_graphic_flush_layer(&layer_hdl, 1);
 }
 

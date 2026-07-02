@@ -98,10 +98,10 @@ The save file is stored at `E:\elite.sav` on the SD card.
 
 ## Screen Layout
 
-The game runs at **128×160** pixels (portrait orientation).
+The game runs at **320×240** pixels (landscape), rendered via MRE layer rotation.
 
-- **View area**: 128×130 pixels (top portion) — 3D space view
-- **Dashboard**: 128×30 pixels (bottom strip) — ship status, radar, gauges
+- **View area**: 320×210 pixels (top portion) — 3D space view
+- **Dashboard**: 320×30 pixels (bottom strip) — ship status, radar, gauges
 
 ---
 
