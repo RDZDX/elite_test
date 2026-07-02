@@ -89,6 +89,7 @@ void handle_sysevt(VMINT message, VMINT param)
     {
     case VM_MSG_CREATE:
     case VM_MSG_ACTIVE:
+        vm_switch_power_saving_mode(turn_off_mode);
         game_phase = PHASE_INIT;
         title_initialized = false;
         numShips = 0;
