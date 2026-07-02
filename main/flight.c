@@ -819,7 +819,13 @@ void flt_DamagePlayer(unsigned char amount, bool fromBack)
 
 void flt_Death(void)
 {
-    if (player_dead) return;
+    if (player_dead)
+    {
+        if (death_start_time == 0) death_start_time = plat_GetTicks();
+        return;
+    }
+
+    death_start_time = plat_GetTicks();
 
     player_dead = true;
     drawCycle   = 255;
@@ -836,7 +842,6 @@ void flt_Death(void)
     }
 
     player_speed = 0;
-    death_start_time = plat_GetTicks();
 }
 
 bool flt_DeathTick(void)

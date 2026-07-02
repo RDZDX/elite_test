@@ -63,7 +63,7 @@ static bool has_save = false;
 static bool title_initialized = false;
 static bool title_accept_enter = false;
 static unsigned char title_query_length = 0;
-static const char* title_query = NULL;
+static char* title_query = NULL;
 static struct ship_t* title_ship = NULL;
 
 /* ---------- MRE entry point ---------- */
@@ -493,7 +493,7 @@ static void begin(void)
 }
 
 static void titleScreen_begin(unsigned char shipType,
-                              const char query[],
+                              char query[],
                               unsigned char queryLength,
                               bool acceptEnter)
 {
@@ -516,7 +516,7 @@ static unsigned char titleScreen_tick(void)
     plat_FillRect(0, 0, screen_w, screen_h, PLT_COLOR_BLACK);
 
     xor_CenterText("---- E L I T E ----", 19, HEADER_Y);
-    xor_CenterText((char*)title_query, title_query_length,
+    xor_CenterText(title_query, title_query_length,
                    (unsigned char)(xor_clipY + xor_clipHeight - 3 * HEADER_Y - 8));
 
     if (title_ship->position.z > TTL_SHIP_END_Z)
@@ -619,6 +619,7 @@ static void nameCmdr_tick(void)
     }
 
     char typedChar = getChar();
+    /* reserve one slot for '\0' so appending + terminator stays in-bounds */
     if (typedChar != '\0' && cmdr_name_length < CMDR_NAME_MAX_LENGTH - 1)
     {
         cmdr_name[cmdr_name_length] = typedChar;
@@ -757,11 +758,13 @@ static void game_tick(VMINT tid)
 
     updateKeys();
 
-    static game_phase_t previous_phase = PHASE_EXIT;
-    if (game_phase != previous_phase)
+    static bool phase_initialized = false;
+    static game_phase_t previous_phase = PHASE_INIT;
+    if (!phase_initialized || game_phase != previous_phase)
     {
         phase_enter(game_phase);
         previous_phase = game_phase;
+        phase_initialized = true;
     }
 
     switch (game_phase)
