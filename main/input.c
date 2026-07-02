@@ -57,10 +57,10 @@ static int mapKeycode(VMINT keycode)
 {
     switch (keycode)
     {
-        case VM_KEY_UP:              return KID_UP;
-        case VM_KEY_DOWN:            return KID_DOWN;
-        case VM_KEY_LEFT:            return KID_LEFT;
-        case VM_KEY_RIGHT:           return KID_RIGHT;
+        case VM_KEY_UP:              return KID_RIGHT; //return KID_UP;
+        case VM_KEY_DOWN:            return KID_LEFT;  //return KID_DOWN;
+        case VM_KEY_LEFT:            return KID_DOWN;  //return KID_LEFT;
+        case VM_KEY_RIGHT:           return KID_UP;    //return KID_RIGHT;
         case VM_KEY_OK:              return KID_ENTER;
         case VM_KEY_LEFT_SOFTKEY:    return KID_GRAPH;
         case VM_KEY_RIGHT_SOFTKEY:   return KID_YEQU;
