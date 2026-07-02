@@ -54,7 +54,8 @@ void vm_main(void)
     vm_reg_sysevt_callback(handle_sysevt);
     vm_reg_keyboard_callback(handle_keyevt);
 
-    srand((unsigned int)vm_get_sys_time_ms());
+    //srand((unsigned int)vm_get_sys_time_ms());
+    srand((unsigned int)vm_get_tick_count());
 }
 
 /* ---------- system event handler ---------- */
