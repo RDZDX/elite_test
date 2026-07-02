@@ -1,7 +1,7 @@
 #include "vmsys.h"
 #include "vmgraph.h"
 #include "input.h"
-
+#include "vmio.h"
 /* Key state counters: 0 = not pressed, N = held for N frames */
 unsigned char yequ    = 0;
 unsigned char graph   = 0;
