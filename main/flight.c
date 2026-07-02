@@ -317,8 +317,10 @@ void drawDashboard(void)
     {
         const struct vector_t cv = normalize((stationSoi ? station : planet).position);
         VMUINT16 col = cv.z > 0 ? PLT_COLOR_YELLOW : PLT_COLOR_GREEN;
-        plat_SetPixel(COMPASS_HCENTER + cv.x / COMPASS_SCALE,
-                      dv + 45 + cv.y / COMPASS_SCALE, col);
+        //plat_SetPixel(COMPASS_HCENTER + cv.x / COMPASS_SCALE,
+        //              dv + 45 + cv.y / COMPASS_SCALE, col);
+        plat_FillRect(COMPASS_HCENTER + cv.x / COMPASS_SCALE,
+                      dv + 45 + cv.y / COMPASS_SCALE, 2, 2, col);
     }
 
     /* --- Right: energy banks + missiles --- */
