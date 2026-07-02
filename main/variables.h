@@ -4,8 +4,18 @@
 #include <stdbool.h>
 #include "platform.h"
 
+static const VMWCHAR save_file_name[] =
+{
+    'E', ':', '\\',
+    'e','l','i','t','e',
+    '.',
+    's','a','v',
+    0
+};
+
 /* Save file path on Nokia 225 SD card */
-#define SAVE_VAR_NAME L"E:\\elite.sav"
+//#define SAVE_VAR_NAME L"E:\\elite.sav"
+#define SAVE_VAR_NAME save_file_name
 
 /* Nokia 225 screen: 128x160 portrait.
    screen_w and screen_h are set at runtime from vm_graphic_get_screen_width/height(). */
