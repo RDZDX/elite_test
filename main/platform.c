@@ -87,15 +87,17 @@ VMFILE plat_FileOpen(const VMWCHAR* path, int mode)
 
 int plat_FileRead(VMFILE f, void* buf, int size)
 {
-    VMUINT read = 0;
-    if (vm_file_read(f, buf, (VMUINT)size, &read) != VM_FILE_SUCCEED) return -1;
+    VMUINT read;
+    if (vm_file_read(f, buf, (VMUINT)size, &read) <= 0)
+        return -1;
     return (int)read;
 }
 
 int plat_FileWrite(VMFILE f, const void* buf, int size)
 {
-    VMUINT written = 0;
-    if (vm_file_write(f, (void*)buf, (VMUINT)size, &written) != VM_FILE_SUCCEED) return -1;
+    VMUINT written;
+    if (vm_file_write(f, (void*)buf, (VMUINT)size, &written) <= 0)
+        return -1;
     return (int)written;
 }
 
