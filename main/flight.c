@@ -225,98 +225,115 @@ static void drawRadarDot(const struct ship_t *ship)
 
 void drawDashboard(void)
 {
-    const int dv = DASH_VOFFSET;
-    const int dw = DASH_WIDTH;
+    const int dv = DASH_VOFFSET;   /* top of dashboard strip */
+    const int dw = DASH_WIDTH;     /* = screen_w = 320 */
 
-    /* Background strip */
+    /* Background */
     plat_FillRect(DASH_HOFFSET, dv, dw, DASH_HEIGHT, PLT_COLOR_BLACK);
-    /* Divider line */
+    /* Top divider */
     plat_Line(DASH_HOFFSET, dv, DASH_HOFFSET + dw - 1, dv, PLT_COLOR_WHITE);
+    /* Mid divider */
+    plat_Line(DASH_HOFFSET, dv + 30, DASH_HOFFSET + dw - 1, dv + 30, PLT_COLOR_WHITE);
 
-    /* --- Left section: shields / fuel / temps / altitude --- */
-    /* fore shield */
+    /* ===== TOP HALF (dv+2 .. dv+28) ===== */
+
+    /* --- Left: fore shield, aft shield, fuel --- */
+    /* Row 1: Fore shield label + bar */
+    xor_SetCursorPos(0, (dv + 2) / 8);
+    xor_Print("F:");
     {
         VMUINT16 col = player_fore_shield < 64 ? PLT_COLOR_RED : PLT_COLOR_YELLOW;
-        plat_FillRect(2, dv + 2, player_fore_shield / 8 + 1, 2, col);
+        plat_FillRect(18, dv + 3, player_fore_shield / 4 + 1, 4, col);
     }
-    /* aft shield */
+    /* Row 2: Aft shield */
+    xor_SetCursorPos(0, (dv + 10) / 8);
+    xor_Print("A:");
     {
         VMUINT16 col = player_aft_shield < 64 ? PLT_COLOR_RED : PLT_COLOR_YELLOW;
-        plat_FillRect(2, dv + 6, player_aft_shield / 8 + 1, 2, col);
+        plat_FillRect(18, dv + 11, player_aft_shield / 4 + 1, 4, col);
     }
-    /* fuel */
+    /* Row 3: Fuel */
+    xor_SetCursorPos(0, (dv + 18) / 8);
+    xor_Print("~:");
     {
-        unsigned char fb = player_fuel <= 64 ? player_fuel / 2 : 32;
-        plat_FillRect(2, dv + 10, fb, 2, PLT_COLOR_YELLOW);
-    }
-    /* cabin temp */
-    {
-        VMUINT16 col = player_cabin_temp > 192 ? PLT_COLOR_RED : PLT_COLOR_YELLOW;
-        plat_FillRect(2, dv + 14, player_cabin_temp / 8, 2, col);
-    }
-    /* laser temp */
-    {
-        VMUINT16 col = player_laser_temp > 192 ? PLT_COLOR_RED : PLT_COLOR_YELLOW;
-        plat_FillRect(2, dv + 18, player_laser_temp / 8, 2, col);
-    }
-    /* altitude */
-    {
-        VMUINT16 col = player_altitude < 32 ? PLT_COLOR_RED : PLT_COLOR_YELLOW;
-        plat_FillRect(2, dv + 22, 1 + player_altitude / 8, 2, col);
+        unsigned char fb = player_fuel <= 64 ? player_fuel : 64;
+        plat_FillRect(18, dv + 19, fb, 4, PLT_COLOR_YELLOW);
     }
 
-    /* --- Center: radar + compass --- */
+    /* --- Center: radar --- */
     if (stationSoi) drawRadarDot(&station);
     for (unsigned char i = 0; i < numShips; i++) drawRadarDot(&ships[i]);
 
-    /* SOI indicator (dot) */
-    if (stationSoi)
-        plat_FillRect(SOI_INDIC_POS_X, SOI_INDIC_POS_Y, 4, 4, PLT_COLOR_WHITE);
-
-    /* Compass */
+    /* --- Right: speed, roll, pitch --- */
+    const int rbase = dw * 3 / 4;
+    xor_SetCursorPos(rbase / 8, (dv + 2) / 8);
+    xor_Print("S:");
     {
-        const struct vector_t cv = normalize((stationSoi ? station : planet).position);
-        VMUINT16 col = cv.z > 0 ? PLT_COLOR_YELLOW : PLT_COLOR_GREEN;
-        plat_SetPixel(COMPASS_HCENTER + cv.x / COMPASS_SCALE,
-                      COMPASS_VCENTER + cv.y / COMPASS_SCALE, col);
+        unsigned char spd = (unsigned char)(62 * player_speed / PLAYER_MAX_SPEED);
+        plat_FillRect(rbase + 18, dv + 3, spd, 4, PLT_COLOR_YELLOW);
     }
-
-    /* --- Right section: speed / roll / pitch / energy / missiles --- */
-    const int rbase = dw * 3 / 4; /* x start of right panel */
-
-    /* speed bar */
-    {
-        unsigned char spd = (unsigned char)(32 * player_speed / PLAYER_MAX_SPEED);
-        plat_FillRect(rbase, dv + 2, spd, 2, PLT_COLOR_YELLOW);
-    }
-    /* roll indicator */
+    xor_SetCursorPos(rbase / 8, (dv + 10) / 8);
+    xor_Print("R:");
     {
         signed char roff = player_roll / 2;
         if (roff ==  16) roff--;
         if (roff == -16) roff++;
-        plat_FillRect(rbase + 16 + roff, dv + 6, 2, 2, PLT_COLOR_YELLOW);
+        plat_FillRect(rbase + 18 + 16 + roff, dv + 11, 4, 4, PLT_COLOR_YELLOW);
     }
-    /* pitch indicator */
+    xor_SetCursorPos(rbase / 8, (dv + 18) / 8);
+    xor_Print("P:");
     {
         signed char poff = player_pitch * 2;
         if (poff ==  16) poff--;
         if (poff == -16) poff++;
-        plat_FillRect(rbase + 16 + poff, dv + 10, 2, 2, PLT_COLOR_YELLOW);
+        plat_FillRect(rbase + 18 + 16 + poff, dv + 19, 4, 4, PLT_COLOR_YELLOW);
     }
-    /* energy banks */
+
+    /* ===== BOTTOM HALF (dv+32 .. dv+58) ===== */
+
+    /* --- Left: cabin temp, laser temp, altitude --- */
+    xor_SetCursorPos(0, (dv + 32) / 8);
+    xor_Print("C:");
+    {
+        VMUINT16 col = player_cabin_temp > 192 ? PLT_COLOR_RED : PLT_COLOR_YELLOW;
+        plat_FillRect(18, dv + 33, player_cabin_temp / 4, 4, col);
+    }
+    xor_SetCursorPos(0, (dv + 40) / 8);
+    xor_Print("L:");
+    {
+        VMUINT16 col = player_laser_temp > 192 ? PLT_COLOR_RED : PLT_COLOR_YELLOW;
+        plat_FillRect(18, dv + 41, player_laser_temp / 4, 4, col);
+    }
+    xor_SetCursorPos(0, (dv + 48) / 8);
+    xor_Print("H:");
+    {
+        VMUINT16 col = player_altitude < 32 ? PLT_COLOR_RED : PLT_COLOR_YELLOW;
+        plat_FillRect(18, dv + 49, 1 + player_altitude / 4, 4, col);
+    }
+
+    /* --- Center: SOI indicator + compass --- */
+    if (stationSoi)
+        plat_FillRect(SOI_INDIC_POS_X, dv + 33, 4, 4, PLT_COLOR_WHITE);
+    {
+        const struct vector_t cv = normalize((stationSoi ? station : planet).position);
+        VMUINT16 col = cv.z > 0 ? PLT_COLOR_YELLOW : PLT_COLOR_GREEN;
+        plat_SetPixel(COMPASS_HCENTER + cv.x / COMPASS_SCALE,
+                      dv + 45 + cv.y / COMPASS_SCALE, col);
+    }
+
+    /* --- Right: energy banks + missiles --- */
     {
         unsigned char rem = player_energy / 2;
-        int barY = dv + 26;
+        int barY = dv + 57;
         while (rem > 0)
         {
-            unsigned char this = rem < 32 ? rem : 32;
-            VMUINT16 col = this <= 4 ? PLT_COLOR_RED : PLT_COLOR_YELLOW;
-            plat_FillRect(rbase, barY, this, 2, col);
-            rem -= this;
-            barY -= 4;
+            unsigned char seg = rem < 32 ? rem : 32;
+            VMUINT16 col = seg <= 4 ? PLT_COLOR_RED : PLT_COLOR_YELLOW;
+            plat_FillRect(rbase, barY, seg, 3, col);
+            rem -= seg;
+            barY -= 5;
         }
     }
-    /* missiles */
     for (unsigned char i = 0; i < player_missiles; i++)
     {
         VMUINT16 col = PLT_COLOR_GREEN;
@@ -325,7 +342,7 @@ void drawDashboard(void)
             if      (missileStatus == LOCKED)    col = PLT_COLOR_RED;
             else if (missileStatus == SEARCHING) col = PLT_COLOR_YELLOW;
         }
-        plat_FillRect(rbase - 6 - 6 * i, dv + 24, 4, 4, col);
+        plat_FillRect(rbase - 8 - 8 * i, dv + 50, 6, 6, col);
     }
 }
 
