@@ -82,7 +82,8 @@ void plat_FlushScreen(void)
 
 VMFILE plat_FileOpen(const VMWCHAR* path, int mode)
 {
-    return vm_file_open(path, mode, VM_TRUE);
+    //return vm_file_open(path, mode, VM_TRUE);
+    return vm_file_open((VMWSTR)path, mode, VM_TRUE);
 }
 
 int plat_FileRead(VMFILE f, void* buf, int size)
@@ -108,6 +109,8 @@ void plat_FileClose(VMFILE f)
 
 int plat_FileExists(const VMWCHAR* path)
 {
-    VMINT attr = vm_file_get_attributes(path);
-    return attr >= 0 ? 1 : 0;
+    //VMINT attr = vm_file_get_attributes(path);
+    //return attr >= 0 ? 1 : 0;
+    VMINT attr = vm_file_get_attributes((VMWSTR)path);
+    return (attr >= 0);
 }
