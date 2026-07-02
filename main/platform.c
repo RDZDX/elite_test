@@ -8,6 +8,7 @@ VMINT screen_w = LOGICAL_W;
 VMINT screen_h = LOGICAL_H;
 VMINT xor_clipWidth = LOGICAL_W;
 VMINT xor_clipHeight = LOGICAL_H - 30; /* screen_h - DASH_HEIGHT */
+static VMUINT16 logical_buf[LOGICAL_W * LOGICAL_H];
 
 unsigned int plat_GetTicks(void)
 {
@@ -23,30 +24,27 @@ void plat_Delay(unsigned int ms)
 
 void plat_SetPixel(int x, int y, VMUINT16 color)
 {
-    if (!layer_buf) return;
-    if (x < 0 || y < 0 || x >= screen_w || y >= screen_h) return;
-    ((VMUINT16*)layer_buf)[y * screen_w + x] = color;
+    if (x < 0 || y < 0 || x >= LOGICAL_W || y >= LOGICAL_H) return;
+    logical_buf[y * LOGICAL_W + x] = color;
 }
 
 VMUINT16 plat_GetPixel(int x, int y)
 {
-    if (!layer_buf) return PLT_COLOR_BLACK;
-    if (x < 0 || y < 0 || x >= screen_w || y >= screen_h) return PLT_COLOR_BLACK;
-    return ((VMUINT16*)layer_buf)[y * screen_w + x];
+    if (x < 0 || y < 0 || x >= LOGICAL_W || y >= LOGICAL_H) return PLT_COLOR_BLACK;
+    return logical_buf[y * LOGICAL_W + x];
 }
 
 void plat_FillRect(int x, int y, int w, int h, VMUINT16 color)
 {
-    if (!layer_buf) return;
     int x1 = x + w;
     int y1 = y + h;
     if (x < 0) x = 0;
     if (y < 0) y = 0;
-    if (x1 > screen_w) x1 = screen_w;
-    if (y1 > screen_h) y1 = screen_h;
+    if (x1 > LOGICAL_W) x1 = LOGICAL_W;
+    if (y1 > LOGICAL_H) y1 = LOGICAL_H;
     for (int yy = y; yy < y1; yy++)
     {
-        VMUINT16* row = (VMUINT16*)layer_buf + yy * screen_w;
+        VMUINT16* row = logical_buf + yy * LOGICAL_W;
         for (int xx = x; xx < x1; xx++)
         {
             row[xx] = color;
@@ -77,8 +75,14 @@ void plat_Line(int x0, int y0, int x1, int y1, VMUINT16 color)
 
 void plat_FlushScreen(void)
 {
-    if (layer_hdl < 0) return;
-    vm_graphic_rotate_layer(layer_hdl, VM_GDI_ROTATE_270);
+    if (layer_hdl < 0 || !layer_buf) return;
+    vm_graphic_rotate(
+        (VMBYTE*)layer_buf,
+        0, 0,
+        (VMBYTE*)logical_buf,
+        0,
+        VM_ROTATE_DEGREE_270
+    );
     vm_graphic_flush_layer(&layer_hdl, 1);
 }
 
