@@ -6,7 +6,7 @@
 
 /* Save file path on Nokia 225 SD card */
 //#define SAVE_VAR_NAME L"E:\\elite.sav"
-#define SAVE_VAR_NAME VMWSTR_CONST(u"e:\\elite.sav")
+#define SAVE_VAR_NAME VMWSTR(u"e:\\elite.sav")
 
 /* Nokia 225 screen: 128x160 portrait.
    screen_w and screen_h are set at runtime from vm_graphic_get_screen_width/height(). */
