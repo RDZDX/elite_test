@@ -3,6 +3,7 @@
 #include "vmio.h"
 #include "vmchset.h"
 #include "vmstdlib.h"
+#include "vmtimer.h"
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -41,7 +42,29 @@ unsigned char player_cargo_space;
 /* ---------- forward declarations ---------- */
 void handle_sysevt(VMINT message, VMINT param);
 void handle_keyevt(VMINT event, VMINT keycode);
-static void game_run(void);
+static void game_tick(VMINT tid);
+
+typedef enum {
+    PHASE_INIT,
+    PHASE_CHECK_SAVE,
+    PHASE_TITLE_LOAD,
+    PHASE_NAME_CMDR,
+    PHASE_TITLE_START,
+    PHASE_MENU,
+    PHASE_FLIGHT,
+    PHASE_DEAD,
+    PHASE_EXIT
+} game_phase_t;
+
+static game_phase_t game_phase = PHASE_INIT;
+static VMINT timer_id = -1;
+
+static bool has_save = false;
+static bool title_initialized = false;
+static bool title_accept_enter = false;
+static unsigned char title_query_length = 0;
+static const char* title_query = NULL;
+static struct ship_t* title_ship = NULL;
 
 /* ---------- MRE entry point ---------- */
 void vm_main(void)
@@ -53,6 +76,7 @@ void vm_main(void)
 
     vm_reg_sysevt_callback(handle_sysevt);
     vm_reg_keyboard_callback(handle_keyevt);
+    timer_id = vm_create_timer(FRAME_TIME, game_tick);
 
     //srand((unsigned int)vm_get_sys_time_ms());
     srand((unsigned int)vm_get_tick_count());
@@ -65,17 +89,25 @@ void handle_sysevt(VMINT message, VMINT param)
     {
     case VM_MSG_CREATE:
     case VM_MSG_ACTIVE:
+        game_phase = PHASE_INIT;
+        title_initialized = false;
+        numShips = 0;
         if (layer_hdl < 0)
         {
             layer_hdl = vm_graphic_create_layer(0, 0, screen_w, screen_h, -1);
             layer_buf = vm_graphic_get_layer_buffer(layer_hdl);
             vm_graphic_set_clip(0, 0, screen_w, screen_h);
         }
-        game_run();
+        if (timer_id < 0) timer_id = vm_create_timer(FRAME_TIME, game_tick);
         break;
 
     case VM_MSG_INACTIVE:
     case VM_MSG_QUIT:
+        if (timer_id >= 0)
+        {
+            vm_delete_timer(timer_id);
+            timer_id = -1;
+        }
         if (layer_hdl >= 0)
         {
             vm_graphic_delete_layer(layer_hdl);
@@ -260,10 +292,6 @@ static void drawMenu(bool resetCrs)
 
 static bool doMenuInput(void)
 {
-    unsigned int frameTimer = plat_GetTicks();
-
-    updateKeys();
-
     const enum currentMenu_t lastMenu    = currentMenu;
     const unsigned char      prevSelOpt  = menu_selOption;
     const signed int         prevCrsX    = gen_crsX;
@@ -432,9 +460,6 @@ static bool doMenuInput(void)
 
     if (yequ == 1) currentMenu = returnMenu;
 
-    /* Frame timing */
-    while (plat_GetTicks() - frameTimer < FRAME_TIME);
-
     if (currentMenu == NONE) return false;
     if (lastMenu != currentMenu) drawMenu(true);
 
@@ -467,56 +492,60 @@ static void begin(void)
     flt_Init();
 }
 
-static unsigned char titleScreen(unsigned char shipType,
-                                  char query[], unsigned char queryLength,
-                                  bool acceptEnter)
+static void titleScreen_begin(unsigned char shipType,
+                              const char query[],
+                              unsigned char queryLength,
+                              bool acceptEnter)
 {
     numShips = 0;
-    struct ship_t* titleShip = NewShip(shipType,
-                                       (struct vector_t){ 0, 0, TTL_SHIP_START_Z },
-                                       Matrix(-256,0,0, 0,0,256, 0,256,0));
-    titleShip->pitch = 127;
-    titleShip->roll  = 127;
+    title_ship = NewShip(shipType,
+                         (struct vector_t){ 0, 0, TTL_SHIP_START_Z },
+                         Matrix(-256,0,0, 0,0,256, 0,256,0));
+    title_ship->pitch = 127;
+    title_ship->roll  = 127;
+    title_query = query;
+    title_query_length = queryLength;
+    title_accept_enter = acceptEnter;
+    title_initialized = true;
+}
 
-    unsigned char returnVal = 0;
+static unsigned char titleScreen_tick(void)
+{
+    if (!title_initialized || !title_ship) return 0;
 
-    while (true)
+    plat_FillRect(0, 0, screen_w, screen_h, PLT_COLOR_BLACK);
+
+    xor_CenterText("---- E L I T E ----", 19, HEADER_Y);
+    xor_CenterText((char*)title_query, title_query_length,
+                   (unsigned char)(xor_clipY + xor_clipHeight - 3 * HEADER_Y - 8));
+
+    if (title_ship->position.z > TTL_SHIP_END_Z)
+        title_ship->position.z -= TTL_SHIP_ZOOM_RATE;
+    MoveShip(title_ship);
+    DrawShip(title_ship);
+    title_ship->orientation = orthonormalize(title_ship->orientation);
+
+    if (!title_accept_enter)
     {
-        plat_FillRect(0, 0, screen_w, screen_h, PLT_COLOR_BLACK);
-
-        xor_CenterText("---- E L I T E ----", 19, HEADER_Y);
-        xor_CenterText(query, queryLength, (unsigned char)(xor_clipY + xor_clipHeight - 3 * HEADER_Y - 8));
-
-        if (titleShip->position.z > TTL_SHIP_END_Z)
-            titleShip->position.z -= TTL_SHIP_ZOOM_RATE;
-        MoveShip(titleShip);
-        DrawShip(titleShip);
-        titleShip->orientation = orthonormalize(titleShip->orientation);
-
-        if (!acceptEnter)
-        {
-            xor_SetCursorPos(5, xor_textRows);
-            xor_Print("(N)");
-            xor_SetCursorPos(xor_textCols - 10, xor_textRows);
-            xor_Print("(Y)");
-        }
-
-        plat_FlushScreen();
-
-        updateKeys();
-
-        if (clear == 1) { numShips = 0; return 2; }
-
-        if (!acceptEnter)
-        {
-            if (yequ == 1)  { returnVal = 0; break; }
-            if (graph == 1) { returnVal = 1; break; }
-        }
-        else if (enter == 1) break;
+        xor_SetCursorPos(5, xor_textRows);
+        xor_Print("(N)");
+        xor_SetCursorPos(xor_textCols - 10, xor_textRows);
+        xor_Print("(Y)");
     }
 
-    numShips = 0;
-    return acceptEnter ? 1 : returnVal;
+    plat_FlushScreen();
+
+    if (clear == 1) return 2;
+
+    if (!title_accept_enter)
+    {
+        if (yequ == 1)  return 0;
+        if (graph == 1) return 1;
+        return 3;
+    }
+
+    if (enter == 1) return 1;
+    return 3;
 }
 
 static void loadGame(void)
@@ -578,91 +607,180 @@ static void saveGame(void)
     plat_FileClose(f);
 }
 
-static bool nameCmdr(void)
+static void nameCmdr_tick(void)
 {
     plat_FillRect(0, 0, screen_w, screen_h, PLT_COLOR_BLACK);
     xor_CenterText("---- E L I T E ----", 19, HEADER_Y);
     xor_SetCursorPos(1, xor_textRows - 1);
     xor_Print("Commander Name: ");
-
-    unsigned char resetX = xor_cursorX;
-    cmdr_name_length = 0;
-
-    do
+    if (cmdr_name_length > 0)
     {
-        plat_FlushScreen();
-        updateKeys();
+        xor_Print(cmdr_name);
+    }
 
-        char typedChar = getChar();
-        if (typedChar != '\0' && cmdr_name_length < CMDR_NAME_MAX_LENGTH)
+    char typedChar = getChar();
+    if (typedChar != '\0' && cmdr_name_length < CMDR_NAME_MAX_LENGTH - 1)
+    {
+        cmdr_name[cmdr_name_length] = typedChar;
+        cmdr_name_length++;
+        cmdr_name[cmdr_name_length] = '\0';
+    }
+
+    if (clear == 1)
+    {
+        if (cmdr_name_length > 0)
         {
-            xor_PrintChar(typedChar);
-            cmdr_name[cmdr_name_length] = typedChar;
-            cmdr_name_length++;
+            cmdr_name_length--;
             cmdr_name[cmdr_name_length] = '\0';
         }
-
-        if (clear == 1)
+        else
         {
-            if (cmdr_name_length > 0)
-            {
-                xor_SetCursorPos(resetX, xor_cursorY);
-                xor_Print(cmdr_name);
-                xor_SetCursorPos(resetX, xor_cursorY);
-                cmdr_name_length = 0;
-            }
-            else return true;
+            game_phase = PHASE_EXIT;
         }
     }
-    while (enter == 0);
+    else if (enter == 1)
+    {
+        game_phase = PHASE_TITLE_START;
+    }
 
-    return false;
+    plat_FlushScreen();
 }
 
-static bool run_once(void)
+static void phase_init(void)
 {
     clear = 1; /* prevent immediate exit */
-
     begin();
-
-    /* Check for saved game */
-    int saveExists = plat_FileExists(SAVE_VAR_NAME);
-
-    if (saveExists)
-    {
-        unsigned char tsResponse = titleScreen(BP_COBRA, "Load Saved Commander?", 21, false);
-        if (tsResponse == 2) return false;
-        if (tsResponse == 1) loadGame();
-        else if (nameCmdr()) return true;
-    }
-    else if (nameCmdr()) return true;
-
-    /* Always-shown title screen */
-    if (titleScreen(BP_MAMBA, "Press ENTER, CMDR.", 18, true) == 2) return false;
-
-    /* Core game loop */
-    while (true)
-    {
-        drawMenu(true);
-        while (doMenuInput());
-
-        if (player_condition == DOCKED) saveGame();
-        if (toExit) break;
-
-        flt_ResetPlayerCondition();
-        doFlight();
-
-        if (player_dead) break;
-    }
-
-    return player_dead;
+    toExit = false;
+    game_phase = PHASE_CHECK_SAVE;
 }
 
-/* ---------- game_run: called once per VM_MSG_ACTIVE ---------- */
-static void game_run(void)
+static void phase_check_save(void)
 {
-    toExit = false;
-    while (run_once());
+    has_save = plat_FileExists(SAVE_VAR_NAME) != 0;
+    game_phase = has_save ? PHASE_TITLE_LOAD : PHASE_NAME_CMDR;
+}
 
-    vm_exit_app();
+static void phase_title_load(void)
+{
+    unsigned char tsResponse = titleScreen_tick();
+    if (tsResponse == 3) return;
+
+    title_initialized = false;
+    numShips = 0;
+
+    if (tsResponse == 2) { game_phase = PHASE_EXIT; return; }
+    if (tsResponse == 1) { loadGame(); game_phase = PHASE_TITLE_START; return; }
+    game_phase = PHASE_NAME_CMDR;
+}
+
+static void phase_name_cmdr(void)
+{
+    nameCmdr_tick();
+}
+
+static void phase_title_start(void)
+{
+    unsigned char tsResponse = titleScreen_tick();
+    if (tsResponse == 3) return;
+
+    title_initialized = false;
+    numShips = 0;
+
+    if (tsResponse == 2) { game_phase = PHASE_EXIT; return; }
+    if (tsResponse == 1) game_phase = PHASE_MENU;
+}
+
+static void phase_menu(void)
+{
+    if (doMenuInput()) return;
+
+    if (player_condition == DOCKED) saveGame();
+    if (toExit) { game_phase = PHASE_EXIT; return; }
+    game_phase = PHASE_FLIGHT;
+}
+
+static void phase_flight(void)
+{
+    if (!doFlightInput())
+    {
+        game_phase = PHASE_MENU;
+        return;
+    }
+
+    flt_DoFrame(true);
+    plat_FlushScreen();
+    drawCycle++;
+
+    if (player_dead) { game_phase = PHASE_DEAD; return; }
+    if (player_condition == DOCKED) game_phase = PHASE_MENU;
+}
+
+static void phase_dead(void)
+{
+    if (flt_DeathTick()) game_phase = PHASE_EXIT;
+}
+
+static void phase_enter(game_phase_t phase)
+{
+    switch (phase)
+    {
+    case PHASE_TITLE_LOAD:
+        titleScreen_begin(BP_COBRA, "Load Saved Commander?", 21, false);
+        break;
+    case PHASE_NAME_CMDR:
+        cmdr_name_length = 0;
+        cmdr_name[0] = '\0';
+        break;
+    case PHASE_TITLE_START:
+        titleScreen_begin(BP_MAMBA, "Press ENTER, CMDR.", 18, true);
+        break;
+    case PHASE_MENU:
+        drawMenu(true);
+        break;
+    case PHASE_FLIGHT:
+        flt_ResetPlayerCondition();
+        doFlight();
+        break;
+    case PHASE_DEAD:
+        flt_Death();
+        break;
+    default:
+        break;
+    }
+}
+
+static void game_tick(VMINT tid)
+{
+    (void)tid;
+
+    if (!layer_buf) return;
+
+    updateKeys();
+
+    static game_phase_t previous_phase = PHASE_EXIT;
+    if (game_phase != previous_phase)
+    {
+        phase_enter(game_phase);
+        previous_phase = game_phase;
+    }
+
+    switch (game_phase)
+    {
+    case PHASE_INIT:        phase_init();        break;
+    case PHASE_CHECK_SAVE:  phase_check_save();  break;
+    case PHASE_TITLE_LOAD:  phase_title_load();  break;
+    case PHASE_NAME_CMDR:   phase_name_cmdr();   break;
+    case PHASE_TITLE_START: phase_title_start(); break;
+    case PHASE_MENU:        phase_menu();        break;
+    case PHASE_FLIGHT:      phase_flight();      break;
+    case PHASE_DEAD:        phase_dead();        break;
+    case PHASE_EXIT:
+        if (timer_id >= 0)
+        {
+            vm_delete_timer(timer_id);
+            timer_id = -1;
+        }
+        vm_exit_app();
+        break;
+    }
 }
