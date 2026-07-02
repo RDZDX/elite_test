@@ -22,8 +22,9 @@ extern VMINT xor_clipWidth, xor_clipHeight;
 #define TUNNEL_HOLD_TIME       1600u
 #define DEATH_SCREEN_TIME      8000u
 
-/* Dashboard: 60px strip at the bottom — tall enough for all gauges on 320x240 */
-#define DASH_HEIGHT       60
+/* Dashboard: 80px strip at the bottom — gives enough room for all gauges on 320x240.
+   View area above: 320x160. */
+#define DASH_HEIGHT       80
 #define DASH_HOFFSET      0
 /* Runtime macros that depend on screen_w / screen_h */
 #define DASH_VOFFSET      (screen_h - DASH_HEIGHT)
@@ -50,9 +51,9 @@ extern VMINT xor_clipWidth, xor_clipHeight;
 
 #define MM_SELBAR_WIDTH   250
 
-/* Local map constants (scaled for 320x240 landscape) */
+/* Local map constants (scaled for 320x240 landscape, 160px view height) */
 #define LCL_MAP_HFIX      160
-#define LCL_MAP_VFIX      90
+#define LCL_MAP_VFIX      80
 #define LCL_MAP_DXMAX     (LCL_MAP_HFIX / 4)
 #define LCL_MAP_DYMAX     (LCL_MAP_VFIX / 2 - HEADER_DIVIDER_Y / 2)
 #define GLX_MAP_HOFFSET   0
@@ -65,7 +66,7 @@ extern VMINT xor_clipWidth, xor_clipHeight;
 
 /* Radar: centered in the dashboard strip */
 #define RADAR_HCENTER     (screen_w / 2)
-#define RADAR_VCENTER     (screen_h - DASH_HEIGHT + 30)
+#define RADAR_VCENTER     (screen_h - DASH_HEIGHT + 40)
 #define RADAR_XSCALE      256
 #define RADAR_ZSCALE      1024
 #define RADAR_YSCALE      512
@@ -83,7 +84,7 @@ extern VMINT xor_clipWidth, xor_clipHeight;
 
 /* Compass */
 #define COMPASS_HCENTER   (screen_w / 2)
-#define COMPASS_VCENTER   (screen_h - DASH_HEIGHT + 20)
+#define COMPASS_VCENTER   (screen_h - DASH_HEIGHT + 40)
 #define COMPASS_SCALE     (256 / 9)
 
 /* Ship drawing constants */
