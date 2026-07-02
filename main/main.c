@@ -69,8 +69,8 @@ static struct ship_t* title_ship = NULL;
 /* ---------- MRE entry point ---------- */
 void vm_main(void)
 {
-    screen_w       = vm_graphic_get_screen_width();
-    screen_h       = vm_graphic_get_screen_height();
+    screen_w       = LOGICAL_W;
+    screen_h       = LOGICAL_H;
     xor_clipWidth  = screen_w;
     xor_clipHeight = screen_h - DASH_HEIGHT;
 
@@ -94,9 +94,9 @@ void handle_sysevt(VMINT message, VMINT param)
         numShips = 0;
         if (layer_hdl < 0)
         {
-            layer_hdl = vm_graphic_create_layer(0, 0, screen_w, screen_h, -1);
+            layer_hdl = vm_graphic_create_layer(0, 0, LOGICAL_W, LOGICAL_H, -1);
             layer_buf = vm_graphic_get_layer_buffer(layer_hdl);
-            vm_graphic_set_clip(0, 0, screen_w, screen_h);
+            vm_graphic_set_clip(0, 0, LOGICAL_W, LOGICAL_H);
         }
         if (timer_id < 0) timer_id = vm_create_timer(FRAME_TIME, game_tick);
         break;

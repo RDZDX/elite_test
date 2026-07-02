@@ -8,8 +8,7 @@
 //#define SAVE_VAR_NAME L"E:\\elite.sav"
 #define SAVE_VAR_NAME u"E:\\elite.sav"
 
-/* Nokia 225 screen: 128x160 portrait.
-   screen_w and screen_h are set at runtime from vm_graphic_get_screen_width/height(). */
+/* Logical canvas: 320x240 landscape (software-rotated from 240x320 physical). */
 extern VMINT screen_w, screen_h;
 extern VMINT xor_clipWidth, xor_clipHeight;
 
@@ -49,11 +48,11 @@ extern VMINT xor_clipWidth, xor_clipHeight;
 
 #define LEFT_TEXT_INDENT  4
 
-#define MM_SELBAR_WIDTH   100
+#define MM_SELBAR_WIDTH   250
 
-/* Local map constants (scaled for 128x160) */
-#define LCL_MAP_HFIX      64
-#define LCL_MAP_VFIX      80
+/* Local map constants (scaled for 320x240 landscape) */
+#define LCL_MAP_HFIX      160
+#define LCL_MAP_VFIX      105
 #define LCL_MAP_DXMAX     (LCL_MAP_HFIX / 4)
 #define LCL_MAP_DYMAX     (LCL_MAP_VFIX / 2 - HEADER_DIVIDER_Y / 2)
 #define GLX_MAP_HOFFSET   0

@@ -5,6 +5,9 @@
 #include "vmgraph.h"
 #include "vmio.h"
 
+#define LOGICAL_W  320
+#define LOGICAL_H  240
+
 /* Screen dimensions (runtime) */
 extern VMINT screen_w, screen_h;
 
