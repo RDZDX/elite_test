@@ -1,16 +1,25 @@
 #include "platform.h"
 
-/* Globals defined in main.c */
-VMINT layer_hdl = -1;
-VMUINT8* layer_buf = NULL;
-VMINT screen_w = 128;
-VMINT screen_h = 160;
-VMINT xor_clipWidth = 128;
-VMINT xor_clipHeight = 130; /* screen_h - DASH_HEIGHT */
+/* Physical screen globals (set at runtime from vm_graphic_get_screen_width/height) */
+VMINT    layer_hdl   = -1;
+VMUINT8* layer_buf   = NULL;
+VMINT    screen_w    = LOGICAL_H; /* physical portrait width  = 240 */
+VMINT    screen_h    = LOGICAL_W; /* physical portrait height = 320 */
+VMINT    xor_clipWidth  = LOGICAL_W;
+VMINT    xor_clipHeight = LOGICAL_H - 56; /* LOGICAL_H - DASH_HEIGHT */
+
+/* Logical landscape framebuffer: game always draws into this 320x240 buffer.
+   plat_FlushScreen() rotates it 270 degrees CW into the physical 240x320 layer_buf.
+
+   270 deg CW rotation mapping:
+     logical(lx, ly)  ->  physical(LOGICAL_H-1-ly, lx)
+   Physical dimensions: phys_w = LOGICAL_H = 240, phys_h = LOGICAL_W = 320
+   physical index = (LOGICAL_H-1-ly) + lx * LOGICAL_H
+*/
+static VMUINT16 logical_buf[LOGICAL_W * LOGICAL_H];
 
 unsigned int plat_GetTicks(void)
 {
-    //return (unsigned int)vm_get_sys_time_ms();
     return (unsigned int)vm_get_tick_count();
 }
 
@@ -22,47 +31,40 @@ void plat_Delay(unsigned int ms)
 
 void plat_SetPixel(int x, int y, VMUINT16 color)
 {
-    if (!layer_buf) return;
-    if (x < 0 || y < 0 || x >= screen_w || y >= screen_h) return;
-    ((VMUINT16*)layer_buf)[y * screen_w + x] = color;
+    if (x < 0 || y < 0 || x >= LOGICAL_W || y >= LOGICAL_H) return;
+    logical_buf[y * LOGICAL_W + x] = color;
 }
 
 VMUINT16 plat_GetPixel(int x, int y)
 {
-    if (!layer_buf) return PLT_COLOR_BLACK;
-    if (x < 0 || y < 0 || x >= screen_w || y >= screen_h) return PLT_COLOR_BLACK;
-    return ((VMUINT16*)layer_buf)[y * screen_w + x];
+    if (x < 0 || y < 0 || x >= LOGICAL_W || y >= LOGICAL_H) return PLT_COLOR_BLACK;
+    return logical_buf[y * LOGICAL_W + x];
 }
 
 void plat_FillRect(int x, int y, int w, int h, VMUINT16 color)
 {
-    if (!layer_buf) return;
     int x1 = x + w;
     int y1 = y + h;
-    if (x < 0) x = 0;
-    if (y < 0) y = 0;
-    if (x1 > screen_w) x1 = screen_w;
-    if (y1 > screen_h) y1 = screen_h;
+    if (x  <  0)        x  = 0;
+    if (y  <  0)        y  = 0;
+    if (x1 > LOGICAL_W) x1 = LOGICAL_W;
+    if (y1 > LOGICAL_H) y1 = LOGICAL_H;
     for (int yy = y; yy < y1; yy++)
     {
-        VMUINT16* row = (VMUINT16*)layer_buf + yy * screen_w;
+        VMUINT16* row = logical_buf + yy * LOGICAL_W;
         for (int xx = x; xx < x1; xx++)
-        {
             row[xx] = color;
-        }
     }
 }
 
-/* Bresenham line draw */
+/* Bresenham line */
 void plat_Line(int x0, int y0, int x1, int y1, VMUINT16 color)
 {
-    int dx = x1 - x0;
-    int dy = y1 - y0;
+    int dx = x1 - x0, dy = y1 - y0;
     int sx = dx > 0 ? 1 : -1;
     int sy = dy > 0 ? 1 : -1;
     if (dx < 0) dx = -dx;
     if (dy < 0) dy = -dy;
-
     int err = dx - dy;
     while (1)
     {
@@ -74,31 +76,47 @@ void plat_Line(int x0, int y0, int x1, int y1, VMUINT16 color)
     }
 }
 
+/*
+ * plat_FlushScreen
+ * Rotates logical_buf (320x240 landscape) 270 deg CW into the
+ * physical layer_buf (240x320 portrait), then flushes to display.
+ *
+ * 270 deg CW: logical(lx, ly) -> physical col=(LOGICAL_H-1-ly), row=lx
+ * physical index = col + row * LOGICAL_H
+ *               = (LOGICAL_H-1-ly) + lx * LOGICAL_H
+ */
 void plat_FlushScreen(void)
 {
-    if (layer_hdl < 0) return;
+    if (layer_hdl < 0 || !layer_buf) return;
+
+    VMUINT16* phys = (VMUINT16*)layer_buf;
+    for (int ly = 0; ly < LOGICAL_H; ly++)
+    {
+        const VMUINT16* src  = logical_buf + ly * LOGICAL_W;
+        int             pcol = LOGICAL_H - 1 - ly;
+        for (int lx = 0; lx < LOGICAL_W; lx++)
+            phys[pcol + lx * LOGICAL_H] = src[lx];
+    }
+
     vm_graphic_flush_layer(&layer_hdl, 1);
 }
 
 VMFILE plat_FileOpen(const VMWCHAR* path, int mode)
 {
-    //return vm_file_open(path, mode, VM_TRUE);
     return vm_file_open((VMWSTR)path, mode, VM_TRUE);
 }
 
 int plat_FileRead(VMFILE f, void* buf, int size)
 {
-    VMUINT read;
-    if (vm_file_read(f, buf, (VMUINT)size, &read) <= 0)
-        return -1;
+    VMUINT read = 0;
+    if (vm_file_read(f, buf, (VMUINT)size, &read) <= 0) return -1;
     return (int)read;
 }
 
 int plat_FileWrite(VMFILE f, const void* buf, int size)
 {
-    VMUINT written;
-    if (vm_file_write(f, (void*)buf, (VMUINT)size, &written) <= 0)
-        return -1;
+    VMUINT written = 0;
+    if (vm_file_write(f, (void*)buf, (VMUINT)size, &written) <= 0) return -1;
     return (int)written;
 }
 
@@ -109,8 +127,6 @@ void plat_FileClose(VMFILE f)
 
 int plat_FileExists(const VMWCHAR* path)
 {
-    //VMINT attr = vm_file_get_attributes(path);
-    //return attr >= 0 ? 1 : 0;
     VMINT attr = vm_file_get_attributes((VMWSTR)path);
     return (attr >= 0);
 }
