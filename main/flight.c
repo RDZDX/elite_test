@@ -319,19 +319,19 @@ void drawDashboard(void)
         const int cy = COMPASS_VCENTER;
         const int cr = 9;
         /* Compass disc — circle outline via midpoint algorithm */
-        int bx = cr, by = 0, bd = 1 - cr;
-        while (bx >= by) {
-            plat_SetPixel(cx + bx, cy + by, PLT_COLOR_WHITE);
-            plat_SetPixel(cx + by, cy + bx, PLT_COLOR_WHITE);
-            plat_SetPixel(cx - by, cy + bx, PLT_COLOR_WHITE);
-            plat_SetPixel(cx - bx, cy + by, PLT_COLOR_WHITE);
-            plat_SetPixel(cx - bx, cy - by, PLT_COLOR_WHITE);
-            plat_SetPixel(cx - by, cy - bx, PLT_COLOR_WHITE);
-            plat_SetPixel(cx + by, cy - bx, PLT_COLOR_WHITE);
-            plat_SetPixel(cx + bx, cy - by, PLT_COLOR_WHITE);
-            by++;
-            if (bd < 0) bd += 2 * by + 1;
-            else { bx--; bd += 2 * (by - bx) + 1; }
+        int rx = cr, ry = 0, decision = 1 - cr;
+        while (rx >= ry) {
+            plat_SetPixel(cx + rx, cy + ry, PLT_COLOR_WHITE);
+            plat_SetPixel(cx + ry, cy + rx, PLT_COLOR_WHITE);
+            plat_SetPixel(cx - ry, cy + rx, PLT_COLOR_WHITE);
+            plat_SetPixel(cx - rx, cy + ry, PLT_COLOR_WHITE);
+            plat_SetPixel(cx - rx, cy - ry, PLT_COLOR_WHITE);
+            plat_SetPixel(cx - ry, cy - rx, PLT_COLOR_WHITE);
+            plat_SetPixel(cx + ry, cy - rx, PLT_COLOR_WHITE);
+            plat_SetPixel(cx + rx, cy - ry, PLT_COLOR_WHITE);
+            ry++;
+            if (decision < 0) decision += 2 * ry + 1;
+            else { rx--; decision += 2 * (ry - rx) + 1; }
         }
         /* Compass needle dot — 3×3 rect centered on target direction */
         const struct vector_t cv = normalize((stationSoi ? station : planet).position);
