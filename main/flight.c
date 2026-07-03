@@ -315,12 +315,29 @@ void drawDashboard(void)
     if (stationSoi)
         plat_FillRect(SOI_INDIC_POS_X, dv + 33, 4, 4, PLT_COLOR_WHITE);
     {
+        const int cx = COMPASS_HCENTER;
+        const int cy = COMPASS_VCENTER;
+        const int cr = 9;
+        /* Compass disc — circle outline via midpoint algorithm */
+        int bx = cr, by = 0, bd = 1 - cr;
+        while (bx >= by) {
+            plat_SetPixel(cx + bx, cy + by, PLT_COLOR_WHITE);
+            plat_SetPixel(cx + by, cy + bx, PLT_COLOR_WHITE);
+            plat_SetPixel(cx - by, cy + bx, PLT_COLOR_WHITE);
+            plat_SetPixel(cx - bx, cy + by, PLT_COLOR_WHITE);
+            plat_SetPixel(cx - bx, cy - by, PLT_COLOR_WHITE);
+            plat_SetPixel(cx - by, cy - bx, PLT_COLOR_WHITE);
+            plat_SetPixel(cx + by, cy - bx, PLT_COLOR_WHITE);
+            plat_SetPixel(cx + bx, cy - by, PLT_COLOR_WHITE);
+            by++;
+            if (bd < 0) bd += 2 * by + 1;
+            else { bx--; bd += 2 * (by - bx) + 1; }
+        }
+        /* Compass needle dot — 3×3 rect centered on target direction */
         const struct vector_t cv = normalize((stationSoi ? station : planet).position);
         VMUINT16 col = cv.z > 0 ? PLT_COLOR_YELLOW : PLT_COLOR_GREEN;
-        //plat_SetPixel(COMPASS_HCENTER + cv.x / COMPASS_SCALE,
-        //              dv + 45 + cv.y / COMPASS_SCALE, col);
-        plat_FillRect(COMPASS_HCENTER + cv.x / COMPASS_SCALE,
-                      dv + 45 + cv.y / COMPASS_SCALE, 2, 2, col);
+        plat_FillRect(cx + cv.x / COMPASS_SCALE - 1,
+                      cy + cv.y / COMPASS_SCALE - 1, 3, 3, col);
     }
 
     /* --- Right: energy banks + missiles --- */
