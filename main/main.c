@@ -46,15 +46,17 @@ static void game_run(void);
 /* ---------- MRE entry point ---------- */
 void vm_main(void)
 {
-    screen_w       = vm_graphic_get_screen_width();
-    screen_h       = vm_graphic_get_screen_height();
-    xor_clipWidth  = screen_w;
-    xor_clipHeight = screen_h - DASH_HEIGHT;
+    /* Read physical screen size (Nokia 225: 240 wide x 320 tall portrait) */
+    screen_w = vm_graphic_get_screen_width();
+    screen_h = vm_graphic_get_screen_height();
+
+    /* Game logic always runs in logical 320x240 landscape space */
+    xor_clipWidth  = LOGICAL_W;
+    xor_clipHeight = LOGICAL_H - DASH_HEIGHT;  /* 240 - 56 = 184 */
 
     vm_reg_sysevt_callback(handle_sysevt);
     vm_reg_keyboard_callback(handle_keyevt);
 
-    //srand((unsigned int)vm_get_sys_time_ms());
     srand((unsigned int)vm_get_tick_count());
 }
 
@@ -67,6 +69,7 @@ void handle_sysevt(VMINT message, VMINT param)
     case VM_MSG_ACTIVE:
         if (layer_hdl < 0)
         {
+            /* Create layer at physical screen size (portrait 240x320) */
             layer_hdl = vm_graphic_create_layer(0, 0, screen_w, screen_h, -1);
             layer_buf = vm_graphic_get_layer_buffer(layer_hdl);
             vm_graphic_set_clip(0, 0, screen_w, screen_h);
@@ -113,8 +116,8 @@ static void printPlayerCondition(void)
 
 static void drawMenu(bool resetCrs)
 {
-    /* Background */
-    plat_FillRect(0, 0, screen_w, screen_h, PLT_COLOR_BLACK);
+    /* Background — use logical dimensions */
+    plat_FillRect(0, 0, LOGICAL_W, LOGICAL_H, PLT_COLOR_BLACK);
     drawDashboard();
 
     /* Outer frame */
@@ -482,7 +485,7 @@ static unsigned char titleScreen(unsigned char shipType,
 
     while (true)
     {
-        plat_FillRect(0, 0, screen_w, screen_h, PLT_COLOR_BLACK);
+        plat_FillRect(0, 0, LOGICAL_W, LOGICAL_H, PLT_COLOR_BLACK);
 
         xor_CenterText("---- E L I T E ----", 19, HEADER_Y);
         xor_CenterText(query, queryLength, (unsigned char)(xor_clipY + xor_clipHeight - 3 * HEADER_Y - 8));
@@ -580,7 +583,7 @@ static void saveGame(void)
 
 static bool nameCmdr(void)
 {
-    plat_FillRect(0, 0, screen_w, screen_h, PLT_COLOR_BLACK);
+    plat_FillRect(0, 0, LOGICAL_W, LOGICAL_H, PLT_COLOR_BLACK);
     xor_CenterText("---- E L I T E ----", 19, HEADER_Y);
     xor_SetCursorPos(1, xor_textRows - 1);
     xor_Print("Commander Name: ");
