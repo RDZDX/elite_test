@@ -1,4 +1,4 @@
-# Elite for Nokia 225 (MRE Port)
+# Elite for Nokia 225 (MRE Port) Alpha version. The program only works partially.
 
 A port of [**elite-ce**](https://github.com/ariajd27/elite-ce) — a C reimplementation of the classic space trading game *Elite* — to the **MediaTek Runtime Environment (MRE)** platform, targeting the **Nokia 225** feature phone as a `.vxp` application.
 
