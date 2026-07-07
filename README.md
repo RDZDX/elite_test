@@ -105,6 +105,8 @@ The game runs at **320×240** pixels (landscape), rendered via MRE layer rotatio
 
 ---
 
+![alt text](https://rdzdx.github.io/elite_test/picture.jpg)
+
 ## Credits
 
 - Original *Elite* — David Braben & Ian Bell (1984)
