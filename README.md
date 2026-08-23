@@ -96,6 +96,14 @@ The save file is stored at `E:\elite.sav` on the SD card.
 
 ---
 
+## Nokia Phone Signing
+
+For use on Nokia mobile phones, the application must be signed using the IMSI code of your SIM card.
+
+More information: https://vxpatch.luxferre.top
+
+---
+
 ## Screen Layout
 
 The game runs at **320×240** pixels (landscape), rendered via MRE layer rotation.
