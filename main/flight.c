@@ -979,8 +979,8 @@ static void drawCompass(void)
     const int dy = (v.y >= 0)
         ? (v.y + COMPASS_SCALE / 2) / COMPASS_SCALE
         : -((-v.y + COMPASS_SCALE / 2) / COMPASS_SCALE);
-    const int clampedDx = dx > 8 ? 8 : (dx < -8 ? -8 : dx);
-    const int clampedDy = dy > 8 ? 8 : (dy < -8 ? -8 : dy);
+    const int clampedDx = dx > 7 ? 7 : (dx < -7 ? -7 : dx);
+    const int clampedDy = dy > 7 ? 7 : (dy < -7 ? -7 : dy);
 
     VMUINT16 color =
         (!hasDirection || v.z > 0)
