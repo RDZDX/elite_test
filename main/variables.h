@@ -3,6 +3,9 @@
 
 #include <stdbool.h>
 #include "platform.h"
+#include "dashleft.h"
+#include "dashcenter.h"
+#include "dashright.h"
 
 /* Save file path on Nokia 225 SD card */
 //#define SAVE_VAR_NAME L"E:\\elite.sav"
@@ -39,12 +42,10 @@ extern VMINT xor_clipWidth, xor_clipHeight;
 /* Runtime macros that depend on screen_w / screen_h */
 #define DASH_VOFFSET      (screen_h - DASH_HEIGHT)
 #define DASH_WIDTH        screen_w
-#define DASH_HOFFSET_CENTER (screen_w / 2)
-#define DASH_HOFFSET_RIGHT  (screen_w * 3 / 4)
-
-#define DASH_LEFT_X   ((screen_h - 266) / 2)
-#define DASH_CENTER_X (DASH_LEFT_X + 56)
-#define DASH_RIGHT_X  (DASH_CENTER_X + 156)
+#define DASH_SPRITE_WIDTH   (dashleft_width + dashcenter_width + dashright_width)
+#define DASH_SPRITE_HOFFSET ((screen_w - DASH_SPRITE_WIDTH) / 2)
+#define DASH_HOFFSET_CENTER (DASH_SPRITE_HOFFSET + dashleft_width)
+#define DASH_HOFFSET_RIGHT  (DASH_HOFFSET_CENTER + dashcenter_width)
 
 /* View area center */
 #define VIEW_HCENTER      (screen_w / 2)
@@ -83,7 +84,7 @@ extern VMINT xor_clipWidth, xor_clipHeight;
 #define SML_CRS_SIZE      3
 
 /* Radar: centered in the dashboard strip */
-#define RADAR_HCENTER     (screen_w / 2)
+#define RADAR_HCENTER     (DASH_HOFFSET_CENTER + 74)
 #define RADAR_VCENTER     (screen_h - DASH_HEIGHT + 30) //+40
 #define RADAR_XSCALE      256
 #define RADAR_ZSCALE      1024
@@ -97,12 +98,12 @@ extern VMINT xor_clipWidth, xor_clipHeight;
 #define COLOR_RED     4
 
 /* SOI indicator position */
-#define SOI_INDIC_POS_X   (screen_w - 12)
-#define SOI_INDIC_POS_Y   (screen_h - DASH_HEIGHT + 4)
+#define SOI_INDIC_POS_X   (DASH_HOFFSET_CENTER + 142)
+#define SOI_INDIC_POS_Y   (DASH_VOFFSET + 42)
 
 /* Compass */
-#define COMPASS_HCENTER   (screen_w / 2)
-#define COMPASS_VCENTER   (screen_h - DASH_HEIGHT + 45) //+40 +20
+#define COMPASS_HCENTER   (DASH_HOFFSET_CENTER + 145)
+#define COMPASS_VCENTER   (DASH_VOFFSET + 10)
 #define COMPASS_SCALE     (256 / 9)
 
 /* Ship drawing constants */

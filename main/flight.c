@@ -970,24 +970,26 @@ void drawSprite(
 
 static void drawCompass(void)
 {
-    struct vector_t v =
-        normalize(
-            (stationSoi
-                ? station
-                : planet).position);
+    const struct vector_t target = (stationSoi ? station : planet).position;
+    const struct vector_t v = normalize(target);
+    const int dx = (v.x >= 0)
+        ? (v.x + COMPASS_SCALE / 2) / COMPASS_SCALE
+        : -((-v.x + COMPASS_SCALE / 2) / COMPASS_SCALE);
+    const int dy = (v.y >= 0)
+        ? (v.y + COMPASS_SCALE / 2) / COMPASS_SCALE
+        : -((-v.y + COMPASS_SCALE / 2) / COMPASS_SCALE);
 
     VMUINT16 color =
         (v.z > 0)
         ? PLT_COLOR_YELLOW
         : PLT_COLOR_GREEN;
 
+    /* plat_FillRect uses top-left origin; shift by 1 so marker is compass-centered. */
     plat_FillRect(
-        COMPASS_HCENTER +
-            v.x / COMPASS_SCALE,
-        COMPASS_VCENTER +
-            v.y / COMPASS_SCALE,
-        2,
-        1,
+        COMPASS_HCENTER + dx - 1,
+        COMPASS_VCENTER + dy - 1,
+        3,
+        3,
         color);
 }
 
@@ -1034,17 +1036,17 @@ static void drawRadarDot(const struct ship_t *ship)
 void drawDashboard(void)
 {
     drawSprite(
-        DASH_HOFFSET,
+        DASH_SPRITE_HOFFSET,
         DASH_VOFFSET,
         dashleft_data);
 
     drawSprite(
-        DASH_HOFFSET_CENTER - dashcenter_width / 2,
+        DASH_HOFFSET_CENTER,
         DASH_VOFFSET,
         dashcenter_data);
 
     drawSprite(
-        screen_w - dashright_width,
+        DASH_HOFFSET_RIGHT,
         DASH_VOFFSET,
         dashright_data);
 
@@ -1069,7 +1071,7 @@ void drawDashboard(void)
      */
 
     plat_FillRect(
-        screen_w - dashright_width + 4,
+        DASH_HOFFSET_RIGHT + 4,
         DASH_VOFFSET + 2,
         32 * player_speed / PLAYER_MAX_SPEED,
         3,
