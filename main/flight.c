@@ -978,6 +978,8 @@ static void drawCompass(void)
     const int dy = (v.y >= 0)
         ? (v.y + COMPASS_SCALE / 2) / COMPASS_SCALE
         : -((-v.y + COMPASS_SCALE / 2) / COMPASS_SCALE);
+    const int clampedDx = dx > 8 ? 8 : (dx < -8 ? -8 : dx);
+    const int clampedDy = dy > 8 ? 8 : (dy < -8 ? -8 : dy);
 
     VMUINT16 color =
         (v.z > 0)
@@ -986,8 +988,8 @@ static void drawCompass(void)
 
     /* plat_FillRect uses top-left origin; shift by 1 so marker is compass-centered. */
     plat_FillRect(
-        COMPASS_HCENTER + dx - 1,
-        COMPASS_VCENTER + dy - 1,
+        COMPASS_HCENTER + clampedDx - 1,
+        COMPASS_VCENTER + clampedDy - 1,
         3,
         3,
         color);
