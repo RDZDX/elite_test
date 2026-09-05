@@ -43,7 +43,7 @@ extern VMINT xor_clipWidth, xor_clipHeight;
 #define DASH_VOFFSET      (screen_h - DASH_HEIGHT)
 #define DASH_WIDTH        screen_w
 #define DASH_SPRITE_WIDTH   (dashleft_width + dashcenter_width + dashright_width)
-#define DASH_SPRITE_HOFFSET ((screen_w - DASH_SPRITE_WIDTH) / 2)
+#define DASH_SPRITE_HOFFSET (((screen_w - DASH_SPRITE_WIDTH) > 0) ? ((screen_w - DASH_SPRITE_WIDTH) / 2) : 0)
 #define DASH_HOFFSET_CENTER (DASH_SPRITE_HOFFSET + dashleft_width)
 #define DASH_HOFFSET_RIGHT  (DASH_HOFFSET_CENTER + dashcenter_width)
 
