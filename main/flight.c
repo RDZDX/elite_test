@@ -971,6 +971,13 @@ void drawSprite(
 static void drawCompass(void)
 {
     const struct vector_t target = (stationSoi ? station : planet).position;
+
+    if (magnitude(target) == 0)
+    {
+        plat_FillRect(COMPASS_HCENTER - 1, COMPASS_VCENTER - 1, 3, 3, PLT_COLOR_GREEN);
+        return;
+    }
+
     const struct vector_t v = normalize(target);
     const int dx = (v.x >= 0)
         ? (v.x + COMPASS_SCALE / 2) / COMPASS_SCALE
