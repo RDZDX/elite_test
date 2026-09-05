@@ -971,9 +971,8 @@ void drawSprite(
 static void drawCompass(void)
 {
     const struct vector_t target = (stationSoi ? station : planet).position;
-    const struct vector_t v = (magnitude(target) == 0)
-        ? (struct vector_t){ 0, 0, -256 }
-        : normalize(target);
+    const bool hasDirection = magnitude(target) != 0;
+    const struct vector_t v = hasDirection ? normalize(target) : (struct vector_t){ 0, 0, 0 };
     const int dx = (v.x >= 0)
         ? (v.x + COMPASS_SCALE / 2) / COMPASS_SCALE
         : -((-v.x + COMPASS_SCALE / 2) / COMPASS_SCALE);
@@ -984,7 +983,7 @@ static void drawCompass(void)
     const int clampedDy = dy > 8 ? 8 : (dy < -8 ? -8 : dy);
 
     VMUINT16 color =
-        (v.z > 0)
+        (!hasDirection || v.z > 0)
         ? PLT_COLOR_YELLOW
         : PLT_COLOR_GREEN;
 
